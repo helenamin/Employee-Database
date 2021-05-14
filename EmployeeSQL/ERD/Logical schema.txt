@@ -1,0 +1,42 @@
+#Logical schema
+
+
+department
+-
+"dept_no" PK
+"dept_name"
+
+
+"titles"
+-
+"title_id"  PK
+"title"  
+
+
+"employees"
+-
+"emp_no"  PK
+"emp_title_id" FK >- titles.title_id
+"birth_date" 
+"first_name" 
+"last_name" 
+"sex" 
+"hire_date" 
+
+
+"dept_emp"
+-
+"emp_no"  PK FK >- employees.emp_no
+"dept_no" PK FK >- department.dept_no
+
+
+"dept_manager"
+-
+"dept_no" PK FK >- employees.emp_no
+"emp_no" PK FK >- department.dept_no
+
+
+"salaries"
+-
+"emp_no" PK FK - employees.emp_no
+"salary" PK
