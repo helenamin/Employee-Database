@@ -5,7 +5,7 @@
 
 This is a research project on employees of a corporation from the 1980s and 1990s. All that remain of the database of employees from that period are six CSV files.
 
-In this Project, I've design the tables to hold data in the CSVs, import the CSVs into a SQL database, and answer some questions about the data. In other words, you will perform:
+In this Project, I've design the tables to hold data in the CSVs, import the CSVs into a SQL database, and answer some questions about the data.
 
 
 #### Data Modeling
@@ -14,63 +14,62 @@ After inspecting  the CSVs, I've sketched out an ERD of the tables using [http:/
 
 ![Physical Schema](EmployeeSQL/ERD_Image/Physical_schema.png)
 
-#### Data Engineering
+## Data Engineering
 
-* I've used this table schema to create tables required for each of the six CSV files.
+* I've used this table schema to create tables required for each of the six CSV files. To handle foreign keys, the order in trable creation was important:
 
-```
-CREATE TABLE "department" (
-    "dept_no" VARCHAR(4)   NOT NULL PRIMARY KEY,
-    "dept_name" VARCHAR   NOT NULL
-);
+    ```
+    CREATE TABLE "department" (
+        "dept_no" VARCHAR(4)   NOT NULL PRIMARY KEY,
+        "dept_name" VARCHAR   NOT NULL
+    );
 
-CREATE TABLE "titles" (
-    "title_id" VARCHAR(5)   NOT NULL PRIMARY KEY,
-    "title" VARCHAR   NOT NULL
-);
+    CREATE TABLE "titles" (
+        "title_id" VARCHAR(5)   NOT NULL PRIMARY KEY,
+        "title" VARCHAR   NOT NULL
+    );
 
-CREATE TABLE "employees" (
-    "emp_no" INT   NOT NULL PRIMARY KEY,
-    "emp_title_id" VARCHAR(5)   NOT NULL,
-    "birth_date" date   NOT NULL,
-    "first_name" VARCHAR   NOT NULL,
-    "last_name" VARCHAR   NOT NULL,
-    "sex" VARCHAR(1)   NOT NULL,
-    "hire_date" date   NOT NULL,
-	FOREIGN KEY("emp_title_id") REFERENCES "titles" ("title_id")
-);
+    CREATE TABLE "employees" (
+        "emp_no" INT   NOT NULL PRIMARY KEY,
+        "emp_title_id" VARCHAR(5)   NOT NULL,
+        "birth_date" date   NOT NULL,
+        "first_name" VARCHAR   NOT NULL,
+        "last_name" VARCHAR   NOT NULL,
+        "sex" VARCHAR(1)   NOT NULL,
+        "hire_date" date   NOT NULL,
+        FOREIGN KEY("emp_title_id") REFERENCES "titles" ("title_id")
+    );
 
-CREATE TABLE "dept_emp" (
-    "emp_no" INT   NOT NULL,
-    "dept_no" VARCHAR(4)   NOT NULL,
-	FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
-	FOREIGN KEY("dept_no") REFERENCES "department" ("dept_no"),
-	Primary Key ("emp_no","dept_no")
-);
+    CREATE TABLE "dept_emp" (
+        "emp_no" INT   NOT NULL,
+        "dept_no" VARCHAR(4)   NOT NULL,
+        FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
+        FOREIGN KEY("dept_no") REFERENCES "department" ("dept_no"),
+        Primary Key ("emp_no","dept_no")
+    );
 
-CREATE TABLE "dept_manager" (
-    "dept_no" VARCHAR(4)   NOT NULL,
-    "emp_no" INT   NOT NULL,
-	FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
-	FOREIGN KEY("dept_no") REFERENCES "department" ("dept_no"),
-	Primary Key ("emp_no","dept_no")
-);
+    CREATE TABLE "dept_manager" (
+        "dept_no" VARCHAR(4)   NOT NULL,
+        "emp_no" INT   NOT NULL,
+        FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
+        FOREIGN KEY("dept_no") REFERENCES "department" ("dept_no"),
+        Primary Key ("emp_no","dept_no")
+    );
 
-CREATE TABLE "salaries" (
-    "emp_no" INT   NOT NULL,
-    "salary" INT   NOT NULL,
-	FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
-	Primary Key ("emp_no", "salary")
-);
+    CREATE TABLE "salaries" (
+        "emp_no" INT   NOT NULL,
+        "salary" INT   NOT NULL,
+        FOREIGN KEY("emp_no") REFERENCES "employees" ("emp_no"),
+        Primary Key ("emp_no", "salary")
+    );
 
 
-```
+    ```
 
-  * The tables have been created in a order to be able to handle foreign keys.
 
 * Then I imported CSV files into the corresponding SQL tablein the same order that tables were created.
 
-#### Data Analysis
+## Data Analysis
 
 Once I got a complete database, Then started answering these question:
 
@@ -79,7 +78,7 @@ Once I got a complete database, Then started answering these question:
     select e.emp_no,e.last_name ,e.first_name, e.sex, s.salary
     from employees as e
     inner join salaries as s
-    on s.emp_no = e.emp_no;
+        on s.emp_no = e.emp_no;
     ``` 
 
 2. List first name, last name, and hire date for employees who were hired in 1986.
@@ -102,50 +101,69 @@ Once I got a complete database, Then started answering these question:
 
 4. List the department of each employee with the following information: employee number, last name, first name, and department name.
 
+    ```
+    select employees.emp_no, employees.last_name, employees.first_name, department.dept_name
+    from employees 
+    inner join dept_emp
+	    on employees.emp_no = dept_emp.emp_no
+	    inner join department
+		    on dept_emp.dept_no = department.dept_no;
+    ```
+
 5. List first name, last name, and sex for employees whose first name is "Hercules" and last names begin with "B."
+
+    ```
+    select first_name, last_name, sex
+    from employees
+    where first_name = 'Hercules' and last_name like 'B%';
+    ```
 
 6. List all employees in the Sales department, including their employee number, last name, first name, and department name.
 
+    ```
+    select e.emp_no,e.last_name,e.first_name, d.dept_name
+    from employees as e 
+    inner join dept_emp as de
+        on e.emp_no = de.emp_no
+        inner join department as d
+            on de.dept_no = d.dept_no
+    where d.dept_name ='Sales';
+    ```
+
 7. List all employees in the Sales and Development departments, including their employee number, last name, first name, and department name.
+
+    ```
+    select e.emp_no,e.last_name,e.first_name, d.dept_name
+    from employees as e 
+    inner join dept_emp as de
+        on e.emp_no = de.emp_no
+        inner join department as d
+            on de.dept_no = d.dept_no
+    where d.dept_name ='Sales' or d.dept_name ='Development';
+    ```
 
 8. In descending order, list the frequency count of employee last names, i.e., how many employees share each last name.
 
-## Bonus (Optional)
+    ```
+    select last_name, count(last_name) as "Frequency"
+    from employees
+    group by last_name
+    order by "Frequency" Desc;
+    ```
 
-As you examine the data, you are overcome with a creeping suspicion that the dataset is fake. You surmise that your boss handed you spurious data in order to test the data engineering skills of a new employee. To confirm your hunch, you decide to take the following steps to generate a visualization of the data, with which you will confront your boss:
+## Bonus - More investigation
 
-1. Import the SQL database into Pandas. (Yes, you could read the CSVs directly in Pandas, but you are, after all, trying to prove your technical mettle.) This step may require some research. Feel free to use the code below to get started. Be sure to make any necessary modifications for your username, password, host, port, and database name:
+As the dataset seemed a bit fake, I decided to take the following steps to generate a visualization of the data. So I imported the SQL database into Pandas. Then I imported Employees, titles ans salaries tables in three dataframes and the merged them to get a combined dataframe. Using this combined dataframe:
 
-   ```sql
-   from sqlalchemy import create_engine
-   engine = create_engine('postgresql://localhost:5432/<your_db_name>')
-   connection = engine.connect()
-   ```
+* First I created a histogram to visualize the most common salary ranges for employees. It looks strange that most of employees are on lower range
 
-* Consult [SQLAlchemy documentation](https://docs.sqlalchemy.org/en/latest/core/engines.html#postgresql) for more information.
+![Common Salary Ranges](EmployeeSQL/Bonus_graphs/Common_Salary_Ranges.png)
 
-* If using a password, do not upload your password to your GitHub repository. See [https://www.youtube.com/watch?v=2uaTPmNvH0I](https://www.youtube.com/watch?v=2uaTPmNvH0I) and [https://help.github.com/en/github/using-git/ignoring-files](https://help.github.com/en/github/using-git/ignoring-files) for more information.
 
-2. Create a histogram to visualize the most common salary ranges for employees.
+* Then I created a bar chart of average salaries by title. In this graph, interestingly salary for senior engineers, engineers and assistant engineers are all same which is impossible. This one proves that the database is fake.
 
-3. Create a bar chart of average salary by title.
+![Average Employee Salary by Title](EmployeeSQL/Bonus_graphs/Average_Employee_Salary_by_Title.png)
 
 ## Epilogue
 
-Evidence in hand, you march into your boss's office and present the visualization. With a sly grin, your boss thanks you for your work. On your way out of the office, you hear the words, "Search your ID number." You look down at your badge to see that your employee ID number is 499942.
-
-## Submission
-
-* Create an image file of your ERD.
-
-* Create a `.sql` file of your table schemata.
-
-* Create a `.sql` file of your queries.
-
-* (Optional) Create a Jupyter Notebook of the bonus analysis.
-
-* Create and upload a repository with the above files to GitHub and post a link on BootCamp Spot.
-
-### Copyright
-
-© 2021 Trilogy Education Services, LLC, a 2U, Inc. brand. Confidential and Proprietary. All Rights Reserved.
+At the end I tried to search the ecombined dataframe for the employee ID number 499942 and retrieve data related to it which confirmed again that the data is fake.
