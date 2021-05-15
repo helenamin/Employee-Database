@@ -166,4 +166,4 @@ As the dataset seemed a bit fake, I decided to take the following steps to gener
 
 ## Epilogue
 
-At the end I tried to search the ecombined dataframe for the employee ID number 499942 and retrieve data related to it which confirmed again that the data is fake.
+At the end I tried to search the combined dataframe for the employee ID number 499942 and retrieve data related to it which confirmed again that the data is fake.
